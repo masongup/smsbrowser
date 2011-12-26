@@ -49,23 +49,46 @@ namespace SMSBrowser
             {
                 TextMessage thisLineMessage = new TextMessage();
                 string[] lineParts = fileLine.Split('\t');
+                if (lineParts.Length != 6)
+                    throw new Exception("I don't like the format of this file!");
+
                 thisLineMessage.Time = DateTime.Parse(lineParts[0] + ' ' + lineParts[1]);
                 thisLineMessage.IsOutgoing = lineParts[2].Equals("out");
                 thisLineMessage.PhoneNumber = lineParts[3];
                 thisLineMessage.ContactName = lineParts[4];
                 thisLineMessage.Text = lineParts[5];
+
                 fileList.Add(thisLineMessage);
                 fileLine = fileStream.ReadLine();
-            } 
+            }
 
             fileStream.Close();
 
             if (MasterMessageList == null)
             {
                 MasterMessageList = fileList;
+                return;
             }
 
             //code to combine the current message list with the new one
+            MasterMessageList.AddRange(fileList);
+            MasterMessageList.Sort(delegate(TextMessage a, TextMessage b)
+            {
+                return DateTime.Compare(a.Time, b.Time);
+            });
+
+            List<TextMessage> messagesToDelete = new List<TextMessage>();
+
+            for (int currentMessage = 1; currentMessage < MasterMessageList.Count; currentMessage++)
+            {
+                if (MasterMessageList[currentMessage].Time == MasterMessageList[currentMessage - 1].Time &&
+                    MasterMessageList[currentMessage].PhoneNumber == MasterMessageList[currentMessage - 1].PhoneNumber &&
+                    MasterMessageList[currentMessage].Text.Contains(MasterMessageList[currentMessage - 1].Text))
+                    messagesToDelete.Add(MasterMessageList[currentMessage]);
+            }
+
+            foreach (TextMessage messageToDelete in messagesToDelete)
+                MasterMessageList.Remove(messageToDelete);
         }
 
         public static void PopulateContactsList(ListBox.ObjectCollection windowList)
@@ -92,6 +115,7 @@ namespace SMSBrowser
                     a.MessageList[a.MessageList.Count - 1].Time); 
             });
 
+            windowList.Clear();
             windowList.AddRange(MasterContactList.ToArray());
             FindConversationsAndMultiMessages();
         }
@@ -185,6 +209,7 @@ namespace SMSBrowser
             Stream readStream = new FileStream(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TextData.bin"), FileMode.Open);
             BinaryFormatter readFormatter = new BinaryFormatter();
             MasterMessageList = (List<TextMessage>)readFormatter.Deserialize(readStream);
+            readStream.Close();
             return true;
         }
     }

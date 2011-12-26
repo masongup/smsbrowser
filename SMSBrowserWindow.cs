@@ -29,6 +29,7 @@ namespace SMSBrowser
         private void ContactListSelectionChanged(object sender, EventArgs e)
         {
             MessageDatabase.PopulateMessageList(ContactsList.SelectedItem, MessagesList.Rows);
+            MessagesList.FirstDisplayedScrollingRowIndex = MessagesList.Rows.Count - 1;
         }
 
         private void BrowserWindowShown(object sender, EventArgs e)
