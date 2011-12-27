@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using System.IO.Compression;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -29,11 +30,6 @@ namespace SMSBrowser
             public string ContactName;
             public string PhoneNumber;
             public List<TextMessage> MessageList;
-
-            public override string ToString()
-            {
-                return ContactName.PadRight(22) + "\t" + MessageList.Count.ToString();
-            }
         }
 
         static List<TextMessage> MasterMessageList;
@@ -44,15 +40,23 @@ namespace SMSBrowser
             List<TextMessage> fileList = new List<TextMessage>();
             StreamReader fileStream = new StreamReader(fileName);
             string fileLine = fileStream.ReadLine();
+            DateTime importTime = DateTime.MinValue;
+
+            if (MasterMessageList != null)
+                importTime = MasterMessageList[MasterMessageList.Count - 1].Time;
 
             while (!String.IsNullOrEmpty(fileLine))
             {
                 TextMessage thisLineMessage = new TextMessage();
                 string[] lineParts = fileLine.Split('\t');
+                fileLine = fileStream.ReadLine();
                 if (lineParts.Length != 6)
                     throw new Exception("I don't like the format of this file!");
 
                 thisLineMessage.Time = DateTime.Parse(lineParts[0] + ' ' + lineParts[1]);
+                if (thisLineMessage.Time < importTime)
+                    continue;
+
                 thisLineMessage.IsOutgoing = lineParts[2].Equals("out");
                 thisLineMessage.PhoneNumber = lineParts[3];
                 thisLineMessage.ContactName = lineParts[4];
@@ -83,7 +87,7 @@ namespace SMSBrowser
             {
                 if (MasterMessageList[currentMessage].Time == MasterMessageList[currentMessage - 1].Time &&
                     MasterMessageList[currentMessage].PhoneNumber == MasterMessageList[currentMessage - 1].PhoneNumber &&
-                    MasterMessageList[currentMessage].Text.Contains(MasterMessageList[currentMessage - 1].Text))
+                    MasterMessageList[currentMessage - 1].Text.Contains(MasterMessageList[currentMessage].Text))
                     messagesToDelete.Add(MasterMessageList[currentMessage]);
             }
 
@@ -91,7 +95,7 @@ namespace SMSBrowser
                 MasterMessageList.Remove(messageToDelete);
         }
 
-        public static void PopulateContactsList(ListBox.ObjectCollection windowList)
+        public static void PopulateContactsList(DataGridViewRowCollection windowList)
         {
             MasterContactList = new List<Contact>();
             
@@ -109,31 +113,38 @@ namespace SMSBrowser
                 contactForThisMessage.MessageList.Add(thisMessage);
             }
 
-            MasterContactList.Sort(delegate(Contact a, Contact b) 
-            { 
+            MasterContactList.Sort(delegate(Contact a, Contact b)
+            {
                 return DateTime.Compare(b.MessageList[b.MessageList.Count - 1].Time,
-                    a.MessageList[a.MessageList.Count - 1].Time); 
+                    a.MessageList[a.MessageList.Count - 1].Time);
             });
 
             windowList.Clear();
-            windowList.AddRange(MasterContactList.ToArray());
+
+            foreach (Contact thisContact in MasterContactList)
+            {
+                int rowNumber = windowList.Add();
+                windowList[rowNumber].Tag = thisContact;
+                windowList[rowNumber].Cells[0].Value = thisContact.ContactName;
+                windowList[rowNumber].Cells[1].Value = thisContact.MessageList.Count; //.ToString();
+                windowList[rowNumber].Cells[2].Value = thisContact.MessageList[thisContact.MessageList.Count - 1].Time; //.ToShortDateString();
+            }
+            
             FindConversationsAndMultiMessages();
         }
 
         public static void PopulateMessageList(object contactObject, DataGridViewRowCollection targetGridRows)
         {
-            if (contactObject.GetType() != typeof(Contact))
-                throw new Exception("Wrong object type passed to PopulateMessageList!");
+            if (contactObject == null || contactObject.GetType() != typeof(Contact))
+                return;
 
             Contact selectedContact = (Contact)contactObject;
             DataGridViewCellStyle incomingCell = null;
             DataGridViewCellStyle outgoingCell = null;
 
             targetGridRows.Clear();
-            //targetGridRows.Add(selectedContact.MessageList.Count);
             int currentConversation = -1;
 
-            //for (int messageNumber = 0; messageNumber < selectedContact.MessageList.Count; messageNumber++)
             foreach (TextMessage thisMessage in selectedContact.MessageList)
             {
                 if (currentConversation != thisMessage.ConversationID)
@@ -189,15 +200,20 @@ namespace SMSBrowser
                 }
 
                 foreach (TextMessage messageToDelete in messagesToDelete)
+                {
                     thisContact.MessageList.Remove(messageToDelete);
+                    MasterMessageList.Remove(messageToDelete);
+                }
             }
         }
 
         public static void SaveData()
         {
             Stream writeStream = new FileStream(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TextData.bin"), FileMode.Create);
+            DeflateStream compressStream = new DeflateStream(writeStream, CompressionMode.Compress);
             BinaryFormatter writeFormatter = new BinaryFormatter();
-            writeFormatter.Serialize(writeStream, MasterMessageList);
+            writeFormatter.Serialize(compressStream, MasterMessageList);
+            compressStream.Close();
             writeStream.Close();
         }
 
@@ -207,8 +223,10 @@ namespace SMSBrowser
                 return false;
 
             Stream readStream = new FileStream(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TextData.bin"), FileMode.Open);
+            DeflateStream decompressStream = new DeflateStream(readStream, CompressionMode.Decompress);
             BinaryFormatter readFormatter = new BinaryFormatter();
-            MasterMessageList = (List<TextMessage>)readFormatter.Deserialize(readStream);
+            MasterMessageList = (List<TextMessage>)readFormatter.Deserialize(decompressStream);
+            decompressStream.Close();
             readStream.Close();
             return true;
         }

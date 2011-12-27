@@ -22,20 +22,21 @@ namespace SMSBrowser
                 return;
 
             MessageDatabase.ReadFromTextFile(ImportTextDialog.FileName);
-            MessageDatabase.PopulateContactsList(ContactsList.Items);
+            MessageDatabase.PopulateContactsList(ContactsListView.Rows);
             MessageDatabase.SaveData();
         }
 
         private void ContactListSelectionChanged(object sender, EventArgs e)
         {
-            MessageDatabase.PopulateMessageList(ContactsList.SelectedItem, MessagesList.Rows);
-            MessagesList.FirstDisplayedScrollingRowIndex = MessagesList.Rows.Count - 1;
+            MessageDatabase.PopulateMessageList(ContactsListView.CurrentRow.Tag, MessagesList.Rows);
+            if (MessagesList.Rows.Count != 0)
+                MessagesList.FirstDisplayedScrollingRowIndex = MessagesList.Rows.Count - 1;
         }
 
         private void BrowserWindowShown(object sender, EventArgs e)
         {
             if (MessageDatabase.ReadData())
-                MessageDatabase.PopulateContactsList(ContactsList.Items);
+                MessageDatabase.PopulateContactsList(ContactsListView.Rows);
         }
     }
 }
