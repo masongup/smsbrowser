@@ -63,7 +63,6 @@ namespace SMSBrowser
                 thisLineMessage.Text = lineParts[5];
 
                 fileList.Add(thisLineMessage);
-                fileLine = fileStream.ReadLine();
             }
 
             fileStream.Close();
