@@ -40,11 +40,13 @@
             this.Info = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Body = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ListSplitContainer = new System.Windows.Forms.SplitContainer();
-            this.ImportTextDialog = new System.Windows.Forms.OpenFileDialog();
             this.ContactsListView = new System.Windows.Forms.DataGridView();
             this.ContactName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.NumMessages = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.LastMessageDate = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ImportTextDialog = new System.Windows.Forms.OpenFileDialog();
+            this.ExportFileDialog = new System.Windows.Forms.SaveFileDialog();
+            this.ExportConversationButton = new System.Windows.Forms.Button();
             this.TopPanel.SuspendLayout();
             this.BottomPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.MessagesList)).BeginInit();
@@ -73,6 +75,7 @@
             // 
             // BottomPanel
             // 
+            this.BottomPanel.Controls.Add(this.ExportConversationButton);
             this.BottomPanel.Controls.Add(this.ExportCurrentButton);
             this.BottomPanel.Controls.Add(this.ExportAllButton);
             this.BottomPanel.Controls.Add(this.ImportMoreButton);
@@ -84,12 +87,14 @@
             // 
             // ExportCurrentButton
             // 
-            this.ExportCurrentButton.Location = new System.Drawing.Point(423, 32);
+            this.ExportCurrentButton.Enabled = false;
+            this.ExportCurrentButton.Location = new System.Drawing.Point(481, 15);
             this.ExportCurrentButton.Name = "ExportCurrentButton";
             this.ExportCurrentButton.Size = new System.Drawing.Size(165, 34);
             this.ExportCurrentButton.TabIndex = 2;
-            this.ExportCurrentButton.Text = "Export";
+            this.ExportCurrentButton.Text = "Export Contact";
             this.ExportCurrentButton.UseVisualStyleBackColor = true;
+            this.ExportCurrentButton.Click += new System.EventHandler(this.ExportCurrentClick);
             // 
             // ExportAllButton
             // 
@@ -99,6 +104,7 @@
             this.ExportAllButton.TabIndex = 1;
             this.ExportAllButton.Text = "Export All";
             this.ExportAllButton.UseVisualStyleBackColor = true;
+            this.ExportAllButton.Click += new System.EventHandler(this.ExportAllClick);
             // 
             // ImportMoreButton
             // 
@@ -140,6 +146,7 @@
             this.MessagesList.RowHeadersVisible = false;
             this.MessagesList.Size = new System.Drawing.Size(410, 464);
             this.MessagesList.TabIndex = 3;
+            this.MessagesList.Click += new System.EventHandler(this.ListClicked);
             // 
             // Info
             // 
@@ -173,11 +180,6 @@
             this.ListSplitContainer.SplitterDistance = 323;
             this.ListSplitContainer.TabIndex = 4;
             // 
-            // ImportTextDialog
-            // 
-            this.ImportTextDialog.DefaultExt = "txt";
-            this.ImportTextDialog.Filter = "Text Files|*.txt";
-            // 
             // ContactsListView
             // 
             this.ContactsListView.AllowUserToAddRows = false;
@@ -202,6 +204,7 @@
             this.ContactsListView.Size = new System.Drawing.Size(323, 464);
             this.ContactsListView.TabIndex = 0;
             this.ContactsListView.SelectionChanged += new System.EventHandler(this.ContactListSelectionChanged);
+            this.ContactsListView.Click += new System.EventHandler(this.ListClicked);
             // 
             // ContactName
             // 
@@ -225,6 +228,27 @@
             this.LastMessageDate.HeaderText = "Last Message Date";
             this.LastMessageDate.Name = "LastMessageDate";
             this.LastMessageDate.ReadOnly = true;
+            // 
+            // ImportTextDialog
+            // 
+            this.ImportTextDialog.DefaultExt = "txt";
+            this.ImportTextDialog.Filter = "Text Files|*.txt";
+            // 
+            // ExportFileDialog
+            // 
+            this.ExportFileDialog.DefaultExt = "txt";
+            this.ExportFileDialog.Title = "Export...";
+            // 
+            // ExportConversationButton
+            // 
+            this.ExportConversationButton.Enabled = false;
+            this.ExportConversationButton.Location = new System.Drawing.Point(481, 66);
+            this.ExportConversationButton.Name = "ExportConversationButton";
+            this.ExportConversationButton.Size = new System.Drawing.Size(165, 34);
+            this.ExportConversationButton.TabIndex = 3;
+            this.ExportConversationButton.Text = "Export Conversation";
+            this.ExportConversationButton.UseVisualStyleBackColor = true;
+            this.ExportConversationButton.Click += new System.EventHandler(this.ExportConversationClick);
             // 
             // SMSBrowserWindow
             // 
@@ -267,6 +291,8 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn ContactName;
         private System.Windows.Forms.DataGridViewTextBoxColumn NumMessages;
         private System.Windows.Forms.DataGridViewTextBoxColumn LastMessageDate;
+        private System.Windows.Forms.SaveFileDialog ExportFileDialog;
+        private System.Windows.Forms.Button ExportConversationButton;
     }
 }
 

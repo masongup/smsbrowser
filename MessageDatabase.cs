@@ -132,6 +132,33 @@ namespace SMSBrowser
             FindConversationsAndMultiMessages();
         }
 
+        internal static void ExportCurrentToText(string fileName, object contactObject)
+        {
+            if (contactObject == null || contactObject.GetType() != typeof(Contact))
+                return;
+            
+            StreamWriter textFileWriter = new StreamWriter(fileName);
+            ExportMessagesToText(((Contact)contactObject).MessageList, textFileWriter, false);
+
+            textFileWriter.Close();
+        }
+
+        internal static void ExportConversationToText(string fileName, object messageObject)
+        {
+            if (messageObject == null || messageObject.GetType() != typeof(TextMessage))
+                return;
+            
+            StreamWriter textFileWriter = new StreamWriter(fileName);
+
+            TextMessage selectedMessage = (TextMessage)messageObject;
+            List<TextMessage> conversationMessageList = MasterMessageList.FindAll(delegate(TextMessage m) 
+            { return m.ContactName.Equals(selectedMessage.ContactName) && m.ConversationID == selectedMessage.ConversationID;});
+
+            ExportMessagesToText(conversationMessageList, textFileWriter, false, false);
+
+            textFileWriter.Close();
+        }
+
         public static void PopulateMessageList(object contactObject, DataGridViewRowCollection targetGridRows)
         {
             if (contactObject == null || contactObject.GetType() != typeof(Contact))
@@ -165,6 +192,7 @@ namespace SMSBrowser
                 int rowNumber = targetGridRows.Add();
                 targetGridRows[rowNumber].Cells[0].Value = thisMessage.Time.ToShortTimeString();
                 targetGridRows[rowNumber].Cells[1].Value = thisMessage.Text;
+                targetGridRows[rowNumber].Tag = thisMessage;
 
                 if (thisMessage.IsOutgoing)
                     targetGridRows[rowNumber].Cells[1].Style = outgoingCell;
@@ -203,6 +231,47 @@ namespace SMSBrowser
                     thisContact.MessageList.Remove(messageToDelete);
                     MasterMessageList.Remove(messageToDelete);
                 }
+            }
+        }
+
+        public static void ExportAllToText(string fileName)
+        {
+            StreamWriter textFileWriter = new StreamWriter(fileName);
+            ExportMessagesToText(MasterMessageList, textFileWriter);
+            
+            textFileWriter.Close();
+        }
+
+        private static void ExportMessagesToText(List<TextMessage> messageList, StreamWriter writingStream, 
+            Boolean includeContactDetails = true, Boolean includeDate = true)
+        {
+            if (!includeDate)
+                writingStream.WriteLine(messageList[0].Time.ToLongDateString());
+
+            foreach (TextMessage thisMessage in messageList)
+            {
+                StringBuilder messageLine = new StringBuilder();
+                if (includeDate)
+                {
+                    messageLine.Append(thisMessage.Time.ToString("yyyy-MM-dd"));
+                    messageLine.Append('\t');
+                }
+                messageLine.Append(thisMessage.Time.ToString("HH:mm:ss"));
+                messageLine.Append('\t');
+                if (thisMessage.IsOutgoing)
+                    messageLine.Append("out");
+                else
+                    messageLine.Append("in");
+                messageLine.Append('\t');
+                if (includeContactDetails)
+                {
+                    messageLine.Append(thisMessage.PhoneNumber);
+                    messageLine.Append('\t');
+                    messageLine.Append(thisMessage.ContactName);
+                    messageLine.Append('\t');
+                }
+                messageLine.Append(thisMessage.Text);
+                writingStream.WriteLine(messageLine.ToString());
             }
         }
 
