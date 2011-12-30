@@ -10,8 +10,6 @@ using System.Runtime.Serialization.Formatters.Binary;
 
 namespace SMSBrowser
 {
-    
-    
     static class MessageDatabase
     {
         [Serializable()]
@@ -75,10 +73,7 @@ namespace SMSBrowser
 
             //code to combine the current message list with the new one
             MasterMessageList.AddRange(fileList);
-            MasterMessageList.Sort(delegate(TextMessage a, TextMessage b)
-            {
-                return DateTime.Compare(a.Time, b.Time);
-            });
+            MasterMessageList.Sort((a, b) => DateTime.Compare(a.Time, b.Time));
 
             List<TextMessage> messagesToDelete = new List<TextMessage>();
 
@@ -100,7 +95,7 @@ namespace SMSBrowser
             
             foreach (TextMessage thisMessage in MasterMessageList)
             {
-                Contact contactForThisMessage = MasterContactList.Find(delegate(Contact c) { return c.ContactName.Equals(thisMessage.ContactName); });
+                Contact contactForThisMessage = MasterContactList.Find(c => c.ContactName.Equals(thisMessage.ContactName));
                 if (contactForThisMessage == null)
                 {
                     contactForThisMessage = new Contact();
@@ -112,11 +107,7 @@ namespace SMSBrowser
                 contactForThisMessage.MessageList.Add(thisMessage);
             }
 
-            MasterContactList.Sort(delegate(Contact a, Contact b)
-            {
-                return DateTime.Compare(b.MessageList[b.MessageList.Count - 1].Time,
-                    a.MessageList[a.MessageList.Count - 1].Time);
-            });
+            MasterContactList.Sort((a, b) => DateTime.Compare(b.MessageList[b.MessageList.Count - 1].Time, a.MessageList[a.MessageList.Count - 1].Time));
 
             windowList.Clear();
 
@@ -125,8 +116,8 @@ namespace SMSBrowser
                 int rowNumber = windowList.Add();
                 windowList[rowNumber].Tag = thisContact;
                 windowList[rowNumber].Cells[0].Value = thisContact.ContactName;
-                windowList[rowNumber].Cells[1].Value = thisContact.MessageList.Count; //.ToString();
-                windowList[rowNumber].Cells[2].Value = thisContact.MessageList[thisContact.MessageList.Count - 1].Time; //.ToShortDateString();
+                windowList[rowNumber].Cells[1].Value = thisContact.MessageList.Count;
+                windowList[rowNumber].Cells[2].Value = thisContact.MessageList[thisContact.MessageList.Count - 1].Time;
             }
             
             FindConversationsAndMultiMessages();
@@ -151,8 +142,11 @@ namespace SMSBrowser
             StreamWriter textFileWriter = new StreamWriter(fileName);
 
             TextMessage selectedMessage = (TextMessage)messageObject;
-            List<TextMessage> conversationMessageList = MasterMessageList.FindAll(delegate(TextMessage m) 
-            { return m.ContactName.Equals(selectedMessage.ContactName) && m.ConversationID == selectedMessage.ConversationID;});
+
+            List<TextMessage> conversationMessageList = 
+                (from message in MasterMessageList
+                where message.ContactName.Equals(selectedMessage.ContactName) && message.ConversationID == selectedMessage.ConversationID
+                select message).ToList<TextMessage>();
 
             ExportMessagesToText(conversationMessageList, textFileWriter, false, false);
 

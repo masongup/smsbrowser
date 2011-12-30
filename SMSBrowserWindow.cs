@@ -28,15 +28,23 @@ namespace SMSBrowser
 
         private void ContactListSelectionChanged(object sender, EventArgs e)
         {
+            if (ContactsListView.SelectedRows.Count == 0)
+                return;
+
             MessageDatabase.PopulateMessageList(ContactsListView.CurrentRow.Tag, MessagesList.Rows);
             if (MessagesList.Rows.Count != 0)
                 MessagesList.FirstDisplayedScrollingRowIndex = MessagesList.Rows.Count - 1;
+            foreach (DataGridViewRow row in MessagesList.SelectedRows)
+                row.Selected = false;
         }
 
         private void BrowserWindowShown(object sender, EventArgs e)
         {
             if (MessageDatabase.ReadData())
                 MessageDatabase.PopulateContactsList(ContactsListView.Rows);
+
+            foreach (DataGridViewRow row in ContactsListView.SelectedRows)
+                row.Selected = false;
         }
 
         private void ExportAllClick(object sender, EventArgs e)
