@@ -84,5 +84,27 @@ namespace SMSBrowser
             else
                 ExportConversationButton.Enabled = true;
         }
+
+        private void SearchBoxKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode != Keys.Return && e.KeyCode != Keys.Enter)
+                return;
+
+            if (string.IsNullOrEmpty(SearchBox.Text) || MessagesList.Rows.Count == 0)
+                return;
+
+            e.SuppressKeyPress = true;
+
+            foreach (DataGridViewRow selectedRow in MessagesList.SelectedRows)
+                selectedRow.Selected = false;
+
+            var foundRows = from DataGridViewRow r in MessagesList.Rows where r.Cells[1].Value.ToString().Contains(SearchBox.Text) select r;
+
+            foreach (var row in foundRows)
+                row.Selected = true;
+            
+            if (MessagesList.SelectedRows.Count > 0)
+                MessagesList.FirstDisplayedScrollingRowIndex = MessagesList.SelectedRows[0].Index;
+        }
     }
 }
