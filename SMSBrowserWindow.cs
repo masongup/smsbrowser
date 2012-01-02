@@ -26,6 +26,12 @@ namespace SMSBrowser
             MessageDatabase.SaveData();
         }
 
+        private void ImportFromDroidClicked(object sender, EventArgs e)
+        {
+            MessageDatabase.ReadFromAndroidDB();
+            MessageDatabase.PopulateContactsList(ContactsListView.Rows);
+        }
+
         private void ContactListSelectionChanged(object sender, EventArgs e)
         {
             if (ContactsListView.SelectedRows.Count == 0)

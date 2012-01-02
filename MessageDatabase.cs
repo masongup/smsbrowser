@@ -7,6 +7,7 @@ using System.IO.Compression;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Data.SQLite;
 
 namespace SMSBrowser
 {
@@ -32,6 +33,67 @@ namespace SMSBrowser
 
         static List<TextMessage> MasterMessageList;
         static List<Contact> MasterContactList;
+
+        //SQL to get the message list from raw databases, though it needs both the mmssms.db and contacts2.db
+        //SELECT contacts2.raw_contacts.display_name, sms.body, sms.date, sms.address, sms.type
+        //FROM sms JOIN contacts2.raw_contacts ON sms.person = contacts2.raw_contacts._id
+        //WHERE sms.date > 1,321,925,351,836;
+
+        public static void ReadFromAndroidDB()
+        {
+            string messageDBPath = "C:\\Users\\Mason\\Android Work\\mmssms.db";
+            string contactsDBPath = "C:\\Users\\Mason\\Android Work\\contacts2.db";
+            string queryBase = "SELECT body, date, address, type " +
+                "FROM sms";
+            List<TextMessage> fileList = new List<TextMessage>();
+            List<Contact> fileContacts = new List<Contact>();
+            long droidEpoch = DateTime.Parse("January 1 1970, 00:00:00.000").Ticks;
+
+            if (MasterMessageList != null)
+                queryBase += " WHERE sms.date > " + MasterMessageList[MasterMessageList.Count - 1].Time.Ticks;
+
+            queryBase += " ORDER BY date;";
+
+            var androidDBConnection = new SQLiteConnection("Data Source=" + messageDBPath + ";");
+            SQLiteCommand androidDBCommand = androidDBConnection.CreateCommand();
+            androidDBCommand.CommandType = System.Data.CommandType.Text;
+            androidDBCommand.CommandText = queryBase;
+            androidDBConnection.Open();
+            SQLiteDataReader androidDBReader = androidDBCommand.ExecuteReader();
+            while (androidDBReader.Read())
+            {
+                TextMessage thisLineMessage = new TextMessage();
+
+                long testLong = (long)androidDBReader["date"];
+                thisLineMessage.Time = new DateTime(droidEpoch + (10000 * (long)androidDBReader["date"])).ToLocalTime();
+                thisLineMessage.IsOutgoing = androidDBReader["type"].ToString().Equals("2");
+                thisLineMessage.PhoneNumber = androidDBReader["address"].ToString();
+                thisLineMessage.Text = androidDBReader["body"].ToString();
+
+                fileList.Add(thisLineMessage);
+            }
+
+            queryBase = "SELECT display_name, date, address, type " +
+                "FROM raw_contacts";
+            androidDBConnection = new SQLiteConnection("Data Source=" + contactsDBPath + ";");
+            androidDBCommand = androidDBConnection.CreateCommand();
+            androidDBCommand.CommandType = System.Data.CommandType.Text;
+            androidDBCommand.CommandText = queryBase;
+            androidDBConnection.Open();
+            androidDBReader = androidDBCommand.ExecuteReader();
+            while (androidDBReader.Read())
+            {
+                Contact thisContact = new Contact();
+
+                fileContacts.Add(thisContact);
+            }
+
+            if (MasterMessageList == null)
+            {
+                MasterMessageList = fileList;
+                return;
+            }
+        }
 
         public static void ReadFromTextFile(string fileName)
         {
