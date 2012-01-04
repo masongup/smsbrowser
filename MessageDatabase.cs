@@ -64,7 +64,6 @@ namespace SMSBrowser
             {
                 TextMessage thisLineMessage = new TextMessage();
 
-                long testLong = (long)androidDBReader["date"];
                 thisLineMessage.Time = new DateTime(droidEpoch + (10000 * (long)androidDBReader["date"])).ToLocalTime();
                 thisLineMessage.IsOutgoing = androidDBReader["type"].ToString().Equals("2");
                 thisLineMessage.PhoneNumber = androidDBReader["address"].ToString();
@@ -73,8 +72,8 @@ namespace SMSBrowser
                 fileList.Add(thisLineMessage);
             }
 
-            queryBase = "SELECT display_name, date, address, type " +
-                "FROM raw_contacts";
+            queryBase = "SELECT person, display_name, number " +
+                "FROM view_v1_phones ORDER BY person;";
             androidDBConnection = new SQLiteConnection("Data Source=" + contactsDBPath + ";");
             androidDBCommand = androidDBConnection.CreateCommand();
             androidDBCommand.CommandType = System.Data.CommandType.Text;
@@ -85,6 +84,8 @@ namespace SMSBrowser
             {
                 Contact thisContact = new Contact();
 
+                thisContact.ContactName = androidDBReader["display_name"].ToString();
+                thisContact.PhoneNumber = androidDBReader["number"].ToString();
                 fileContacts.Add(thisContact);
             }
 
