@@ -30,6 +30,7 @@ namespace SMSBrowser
         {
             MessageDatabase.ReadFromAndroidDB();
             MessageDatabase.PopulateContactsList(ContactsListView.Rows);
+            MessageDatabase.SaveData();
         }
 
         private void ContactListSelectionChanged(object sender, EventArgs e)
