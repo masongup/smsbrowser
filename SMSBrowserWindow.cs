@@ -11,9 +11,19 @@ namespace SMSBrowser
 {
     public partial class SMSBrowserWindow : Form
     {
+        private Boolean runNetworkThread = true;
+        
         public SMSBrowserWindow()
         {
             InitializeComponent();
+
+            if (runNetworkThread)
+                Synchronizer.StartSync();
+        }
+
+        private void BrowserWindowClosed(object sender, FormClosedEventArgs e)
+        {
+            Synchronizer.EndSync();
         }
 
         private void ImportMoreClick(object sender, EventArgs e)

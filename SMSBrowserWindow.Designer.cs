@@ -33,6 +33,7 @@
             this.TopPanel = new System.Windows.Forms.Panel();
             this.SearchBox = new System.Windows.Forms.TextBox();
             this.BottomPanel = new System.Windows.Forms.Panel();
+            this.ImportFromDroidButton = new System.Windows.Forms.Button();
             this.ExportConversationButton = new System.Windows.Forms.Button();
             this.ExportCurrentButton = new System.Windows.Forms.Button();
             this.ExportAllButton = new System.Windows.Forms.Button();
@@ -47,7 +48,6 @@
             this.LastMessageDate = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ImportTextDialog = new System.Windows.Forms.OpenFileDialog();
             this.ExportFileDialog = new System.Windows.Forms.SaveFileDialog();
-            this.ImportFromDroidButton = new System.Windows.Forms.Button();
             this.TopPanel.SuspendLayout();
             this.BottomPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.MessagesList)).BeginInit();
@@ -88,6 +88,16 @@
             this.BottomPanel.Name = "BottomPanel";
             this.BottomPanel.Size = new System.Drawing.Size(737, 140);
             this.BottomPanel.TabIndex = 1;
+            // 
+            // ImportFromDroidButton
+            // 
+            this.ImportFromDroidButton.Location = new System.Drawing.Point(187, 18);
+            this.ImportFromDroidButton.Name = "ImportFromDroidButton";
+            this.ImportFromDroidButton.Size = new System.Drawing.Size(166, 31);
+            this.ImportFromDroidButton.TabIndex = 4;
+            this.ImportFromDroidButton.Text = "Import From Droid";
+            this.ImportFromDroidButton.UseVisualStyleBackColor = true;
+            this.ImportFromDroidButton.Click += new System.EventHandler(this.ImportFromDroidClicked);
             // 
             // ExportConversationButton
             // 
@@ -255,16 +265,6 @@
             this.ExportFileDialog.DefaultExt = "txt";
             this.ExportFileDialog.Title = "Export...";
             // 
-            // ImportFromDroidButton
-            // 
-            this.ImportFromDroidButton.Location = new System.Drawing.Point(187, 18);
-            this.ImportFromDroidButton.Name = "ImportFromDroidButton";
-            this.ImportFromDroidButton.Size = new System.Drawing.Size(166, 31);
-            this.ImportFromDroidButton.TabIndex = 4;
-            this.ImportFromDroidButton.Text = "Import From Droid";
-            this.ImportFromDroidButton.UseVisualStyleBackColor = true;
-            this.ImportFromDroidButton.Click += new System.EventHandler(this.ImportFromDroidClicked);
-            // 
             // SMSBrowserWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -275,6 +275,7 @@
             this.Controls.Add(this.TopPanel);
             this.Name = "SMSBrowserWindow";
             this.Text = "SMSBrowser";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.BrowserWindowClosed);
             this.Shown += new System.EventHandler(this.BrowserWindowShown);
             this.TopPanel.ResumeLayout(false);
             this.TopPanel.PerformLayout();
