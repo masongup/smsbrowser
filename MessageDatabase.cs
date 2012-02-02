@@ -389,5 +389,10 @@ namespace SMSBrowser
             readStream.Close();
             return true;
         }
+
+        public static DateTime GetMostRecentMessageTime()
+        {
+            return MasterMessageList[MasterMessageList.Count - 1].Time;
+        }
     }
 }

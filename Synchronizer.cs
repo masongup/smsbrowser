@@ -58,6 +58,7 @@ namespace SMSBrowser
         private static void DoSync(NetworkStream syncStream)
         {
             byte[] inputBuffer = new byte[150];
+            int readSize;
 
             //compute the key (need to get the password from somewhere better)
             byte[] salt = { (byte)0x3b, (byte)0x58, (byte)0x3a, (byte)0x8c, (byte)0x49, (byte)0xd3, (byte)0x21, (byte)0x88 };
@@ -76,25 +77,38 @@ namespace SMSBrowser
             aesProvider.Key = key;
 
             //read the IV from the network link and create the encryptor and decryptor with it (needs work)
-            int readSize = syncStream.Read(inputBuffer, 0, 150);
             byte[] cipherIV = new byte[16];
-            Array.ConstrainedCopy(inputBuffer, 0, cipherIV, 0, 16);
+            readSize = syncStream.Read(cipherIV, 0, 16);
+            if (readSize < 16)  //initially, I just throw out the whole transaction if the whole IV isn't recieved. Might want
+                return;         //to do some sort of serial reciever, though.
+            //Array.ConstrainedCopy(inputBuffer, 0, cipherIV, 0, 16);
             aesProvider.IV = cipherIV;
             ICryptoTransform decryptorTransform = aesProvider.CreateDecryptor();
             ICryptoTransform encryptorTransform = aesProvider.CreateEncryptor();
 
             //recieve and decrypt the first data block with the device time
-            byte[] decryptedData = decryptorTransform.TransformFinalBlock(inputBuffer, 21, readSize - 21);
-            string securityString = Encoding.ASCII.GetString(decryptedData, 0, readSize - 21);
-
+            //nothing will be sent out or processed until the timestamp is verified, which proves that I am talking to
+            //the SMSSync app and that it has the correct password
+            readSize = syncStream.Read(inputBuffer, 0, 150);
+            byte[] decryptedData = decryptorTransform.TransformFinalBlock(inputBuffer, 0, readSize);
+            string securityString = Encoding.ASCII.GetString(decryptedData, 0, readSize);
 
             DateTime securityTimestamp;
             if (!DateTime.TryParse(securityString, out securityTimestamp))
                 return;
 
             TimeSpan timeGap = DateTime.Now - securityTimestamp;
-            if (timeGap.TotalSeconds > 30)
+            if (Math.Abs(timeGap.TotalSeconds) > 120)    //gotta cut this time check down some before running on the net
                 return;
+
+            //the sender has now been verified as the smssync app with the proper password and no interference, so it is time
+            //to transmit the last sms timestamp back to the system.
+            //get the timestamp, convert to string, encrypt it, and transmit it
+            DateTime returnTimestamp = MessageDatabase.GetMostRecentMessageTime();
+            byte[] returnTimeCleartext = Encoding.ASCII.GetBytes(returnTimestamp.ToString("yyyy-MM-ddTHH:mm:ss.fffK"));
+            byte[] returnTimeCipherText = encryptorTransform.TransformFinalBlock(returnTimeCleartext, 0, returnTimeCleartext.Length);
+            syncStream.Write(returnTimeCipherText, 0, returnTimeCipherText.Length);
+            //syncStream
         }
     }
 }
