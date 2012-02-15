@@ -131,5 +131,14 @@ namespace SMSBrowser
             if (MessagesList.SelectedRows.Count > 0)
                 MessagesList.FirstDisplayedScrollingRowIndex = MessagesList.SelectedRows[0].Index;
         }
+
+        private void NetworkLoadTimerTick(object sender, EventArgs e)
+        {
+            if (MessageDatabase.TryUpdateFromNetwork())
+            {
+                MessageDatabase.PopulateContactsList(ContactsListView.Rows);
+                MessageDatabase.SaveData();
+            }
+        }
     }
 }

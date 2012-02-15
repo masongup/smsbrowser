@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             this.TopPanel = new System.Windows.Forms.Panel();
@@ -48,6 +49,7 @@
             this.LastMessageDate = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ImportTextDialog = new System.Windows.Forms.OpenFileDialog();
             this.ExportFileDialog = new System.Windows.Forms.SaveFileDialog();
+            this.NetworkLoadTimer = new System.Windows.Forms.Timer(this.components);
             this.TopPanel.SuspendLayout();
             this.BottomPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.MessagesList)).BeginInit();
@@ -265,6 +267,12 @@
             this.ExportFileDialog.DefaultExt = "txt";
             this.ExportFileDialog.Title = "Export...";
             // 
+            // NetworkLoadTimer
+            // 
+            this.NetworkLoadTimer.Enabled = true;
+            this.NetworkLoadTimer.Interval = 2000;
+            this.NetworkLoadTimer.Tick += new System.EventHandler(this.NetworkLoadTimerTick);
+            // 
             // SMSBrowserWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -310,6 +318,7 @@
         private System.Windows.Forms.SaveFileDialog ExportFileDialog;
         private System.Windows.Forms.Button ExportConversationButton;
         private System.Windows.Forms.Button ImportFromDroidButton;
+        private System.Windows.Forms.Timer NetworkLoadTimer;
     }
 }
 

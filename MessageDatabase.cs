@@ -33,101 +33,52 @@ namespace SMSBrowser
 
         static List<TextMessage> MasterMessageList;
         static List<Contact> MasterContactList;
+        //meant to be accessed from multiple threads
+        static List<TextMessage> netSyncMessageList;
 
-        public static void ReadFromAndroidDB()
+        public static int ReadFromNetworkInput(string networkData)
         {
-            string messageDBPath = "C:\\Users\\Mason\\Android Work\\mmssms.db";
-            string contactsDBPath = "C:\\Users\\Mason\\Android Work\\contacts2.db";
-            string queryBase = "SELECT body, date, address, type " +
-                "FROM sms";
-            List<TextMessage> fileList = new List<TextMessage>();
-            List<Contact> fileContacts = new List<Contact>();
             long droidEpoch = DateTime.Parse("January 1 1970, 00:00:00.000").Ticks;
-
-            if (MasterMessageList != null)
-                queryBase += " WHERE sms.date > " + ((MasterMessageList[MasterMessageList.Count - 1].Time.Ticks - droidEpoch)/10000).ToString();
-
-            queryBase += " ORDER BY date;";
-
-            var androidDBConnection = new SQLiteConnection("Data Source=" + messageDBPath + ";");
-            SQLiteCommand androidDBCommand = androidDBConnection.CreateCommand();
-            androidDBCommand.CommandType = System.Data.CommandType.Text;
-            androidDBCommand.CommandText = queryBase;
-            androidDBConnection.Open();
-            SQLiteDataReader androidDBReader = androidDBCommand.ExecuteReader();
-            while (androidDBReader.Read())
+            int messageCount = 0;
+            List<TextMessage> networkList = new List<TextMessage>();
+            string[] smsDataLines = networkData.Split('\r');
+            foreach (string smsMessage in smsDataLines)
             {
-                TextMessage thisLineMessage = new TextMessage();
-
-                thisLineMessage.Time = new DateTime(droidEpoch + (10000 * (long)androidDBReader["date"])).ToLocalTime();
-                thisLineMessage.IsOutgoing = androidDBReader["type"].ToString().Equals("2");
-                char[] phoneNumString = androidDBReader["address"].ToString().ToCharArray();
-                if (phoneNumString == null || phoneNumString.Length == 0)
+                if (string.IsNullOrWhiteSpace(smsMessage))
                     continue;
-                thisLineMessage.PhoneNumber = new string(phoneNumString.Where(c => char.IsDigit(c)).ToArray());
-                if (thisLineMessage.PhoneNumber[0] == '1')
-                    thisLineMessage.PhoneNumber = thisLineMessage.PhoneNumber.Remove(0, 1);
-
-                thisLineMessage.Text = androidDBReader["body"].ToString();
-
-                fileList.Add(thisLineMessage);
+                string[] smsParts = smsMessage.Split('\t');
+                TextMessage thisMessage = new TextMessage();
+                thisMessage.Time = new DateTime(long.Parse(smsParts[0]) * 10000 + droidEpoch);
+                thisMessage.Text = smsParts[4];
+                thisMessage.IsOutgoing = (smsParts[3] == "2");
+                thisMessage.PhoneNumber = smsParts[2];
+                thisMessage.ContactName = smsParts[1];
+                networkList.Add(thisMessage);
+                messageCount++;
             }
-            androidDBConnection.Close();
 
-            queryBase = "SELECT display_name, number " + 
-                "FROM view_v1_phones ORDER BY person;";
-            androidDBConnection = new SQLiteConnection("Data Source=" + contactsDBPath + ";");
-            androidDBCommand = androidDBConnection.CreateCommand();
-            androidDBCommand.CommandType = System.Data.CommandType.Text;
-            androidDBCommand.CommandText = queryBase;
-            androidDBConnection.Open();
-            androidDBReader = androidDBCommand.ExecuteReader();
-            while (androidDBReader.Read())
-            {
-                Contact thisContact = new Contact();
+            if (netSyncMessageList == null)
+                netSyncMessageList = networkList;
+            else
+                lock (netSyncMessageList)
+                    netSyncMessageList = networkList;
 
-                thisContact.ContactName = androidDBReader["display_name"].ToString();
-                char[] phoneNumString = androidDBReader["number"].ToString().ToCharArray();
-                thisContact.PhoneNumber = new string(phoneNumString.Where(c => char.IsDigit(c)).ToArray());
-                if (thisContact.PhoneNumber[0] == '1')
-                    thisContact.PhoneNumber = thisContact.PhoneNumber.Remove(0, 1);
+            return messageCount;
+        }
 
-                fileContacts.Add(thisContact);
-            }
-            androidDBConnection.Close();
-
-            //merge the lists to apply correct names to the messages in the message list
-            foreach (TextMessage thisMessage in fileList)
-            {
-                Contact messageContact = fileContacts.Find(c => c.PhoneNumber.Contains(thisMessage.PhoneNumber));
-                if (messageContact != null)
-                    thisMessage.ContactName = messageContact.ContactName;
-                else
-                    thisMessage.ContactName = thisMessage.PhoneNumber;
-            }
+        public static Boolean TryUpdateFromNetwork()
+        {
+            if (netSyncMessageList == null)
+                return false;
 
             if (MasterMessageList == null)
-            {
-                MasterMessageList = fileList;
-                return;
-            }
+                MasterMessageList = new List<TextMessage>();
 
-            //code to combine the current message list with the new one
-            MasterMessageList.AddRange(fileList);
-            MasterMessageList.Sort((a, b) => DateTime.Compare(a.Time, b.Time));
+            MasterMessageList.AddRange(netSyncMessageList);
+            lock (netSyncMessageList)
+                netSyncMessageList = null;
 
-            List<TextMessage> messagesToDelete = new List<TextMessage>();
-
-            for (int currentMessage = 1; currentMessage < MasterMessageList.Count; currentMessage++)
-            {
-                if (MasterMessageList[currentMessage].Time == MasterMessageList[currentMessage - 1].Time &&
-                    MasterMessageList[currentMessage].PhoneNumber == MasterMessageList[currentMessage - 1].PhoneNumber &&
-                    MasterMessageList[currentMessage - 1].Text.Contains(MasterMessageList[currentMessage].Text))
-                    messagesToDelete.Add(MasterMessageList[currentMessage]);
-            }
-
-            foreach (TextMessage messageToDelete in messagesToDelete)
-                MasterMessageList.Remove(messageToDelete);
+            return true;
         }
 
         public static void ReadFromTextFile(string fileName)
@@ -392,7 +343,10 @@ namespace SMSBrowser
 
         public static DateTime GetMostRecentMessageTime()
         {
-            return MasterMessageList[MasterMessageList.Count - 1].Time;
+            if (MasterMessageList == null || MasterMessageList.Count == 0)
+                return new DateTime(2005, 1, 1);
+            else
+                return MasterMessageList[MasterMessageList.Count - 1].Time;
         }
     }
 }

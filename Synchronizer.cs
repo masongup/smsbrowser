@@ -73,7 +73,7 @@ namespace SMSBrowser
             RijndaelManaged aesProvider = new RijndaelManaged();
             aesProvider.FeedbackSize = 8;
             aesProvider.Mode = CipherMode.CFB;
-            aesProvider.Padding = PaddingMode.Zeros;
+            aesProvider.Padding = PaddingMode.None;
             aesProvider.Key = key;
 
             //read the IV from the network link and create the encryptor and decryptor with it (needs work)
@@ -108,7 +108,13 @@ namespace SMSBrowser
             byte[] returnTimeCleartext = Encoding.ASCII.GetBytes(returnTimestamp.ToString("yyyy-MM-ddTHH:mm:ss.fffK"));
             byte[] returnTimeCipherText = encryptorTransform.TransformFinalBlock(returnTimeCleartext, 0, returnTimeCleartext.Length);
             syncStream.Write(returnTimeCipherText, 0, returnTimeCipherText.Length);
-            //syncStream
+
+            byte[] smsDataCiphertext = new byte[1000];
+            readSize = syncStream.Read(smsDataCiphertext, 0, 1000);
+            byte[] smsDataClearBytes = decryptorTransform.TransformFinalBlock(smsDataCiphertext, 0, readSize);
+            string smsDataClearString = Encoding.ASCII.GetString(smsDataClearBytes, 0, readSize);
+
+            MessageDatabase.ReadFromNetworkInput(smsDataClearString);
         }
     }
 }
