@@ -6,24 +6,38 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using Microsoft.Win32;
 
 namespace SMSBrowser
 {
     public partial class SMSBrowserWindow : Form
     {
-        private Boolean runNetworkThread = true;
-        
+        private const string registryLocation = "HKEY_CURRENT_USER\\Software\\SMSSync";
+        private const int defaultPort = 6178;
+
         public SMSBrowserWindow()
         {
             InitializeComponent();
 
-            if (runNetworkThread)
+            if (!int.TryParse((string)Registry.GetValue(registryLocation, "SyncPort", defaultPort.ToString()), out Synchronizer.SyncPort))
+            {
+                Registry.SetValue(registryLocation, "SyncPort", defaultPort.ToString());    //set it here to make sure that the key exists
+                Synchronizer.SyncPort = defaultPort;                                        //if the key was missing, the other calls would return null
+            }
+
+            Synchronizer.SyncPassword = (string)Registry.GetValue(registryLocation, "SyncPassword", "");
+
+            if (((string)Registry.GetValue(registryLocation, "SyncEnabled", "False")) == "True")
                 Synchronizer.StartSync();
         }
 
         private void BrowserWindowClosed(object sender, FormClosedEventArgs e)
         {
-            Synchronizer.EndSync();
+            Registry.SetValue(registryLocation, "SyncPort", Synchronizer.SyncPort.ToString());
+            Registry.SetValue(registryLocation, "SyncPassword", Synchronizer.SyncPassword);
+
+            if (Synchronizer.EndSync())
+                Registry.SetValue(registryLocation, "SyncEnabled", "True");
         }
 
         private void ImportMoreClick(object sender, EventArgs e)
@@ -130,8 +144,22 @@ namespace SMSBrowser
             if (MessageDatabase.TryUpdateFromNetwork())
             {
                 MessageDatabase.PopulateContactsList(ContactsListView.Rows);
-                //MessageDatabase.SaveData();
+                MessageDatabase.SaveData();
             }
+        }
+
+        private void ConfigureSyncButtonClicked(object sender, EventArgs e)
+        {
+            NetworkConfig configDialog = new NetworkConfig();
+            configDialog.SyncPortTextBox.Text = Synchronizer.SyncPort.ToString();
+            configDialog.SyncPasswordTextBox.Text = Synchronizer.SyncPassword;
+            configDialog.ShowDialog();
+
+            Synchronizer.EndSync();
+            Synchronizer.SyncPort = int.Parse(configDialog.SyncPortTextBox.Text);
+            Synchronizer.SyncPassword = configDialog.SyncPasswordTextBox.Text;
+            if (configDialog.SyncEnabledCheckbox.Checked)
+                Synchronizer.StartSync();
         }
     }
 }

@@ -29,8 +29,8 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             this.TopPanel = new System.Windows.Forms.Panel();
             this.SearchBox = new System.Windows.Forms.TextBox();
             this.BottomPanel = new System.Windows.Forms.Panel();
@@ -49,6 +49,7 @@
             this.ImportTextDialog = new System.Windows.Forms.OpenFileDialog();
             this.ExportFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.NetworkLoadTimer = new System.Windows.Forms.Timer(this.components);
+            this.ConfigSyncButton = new System.Windows.Forms.Button();
             this.TopPanel.SuspendLayout();
             this.BottomPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.MessagesList)).BeginInit();
@@ -61,6 +62,7 @@
             // 
             // TopPanel
             // 
+            this.TopPanel.Controls.Add(this.ConfigSyncButton);
             this.TopPanel.Controls.Add(this.SearchBox);
             this.TopPanel.Dock = System.Windows.Forms.DockStyle.Top;
             this.TopPanel.Location = new System.Drawing.Point(0, 0);
@@ -145,14 +147,14 @@
             this.MessagesList.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.Info,
             this.Body});
-            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.MessagesList.DefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.MessagesList.DefaultCellStyle = dataGridViewCellStyle1;
             this.MessagesList.Dock = System.Windows.Forms.DockStyle.Fill;
             this.MessagesList.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
             this.MessagesList.Location = new System.Drawing.Point(0, 0);
@@ -238,9 +240,9 @@
             // 
             // LastMessageDate
             // 
-            dataGridViewCellStyle4.Format = "d";
-            dataGridViewCellStyle4.NullValue = null;
-            this.LastMessageDate.DefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewCellStyle2.Format = "d";
+            dataGridViewCellStyle2.NullValue = null;
+            this.LastMessageDate.DefaultCellStyle = dataGridViewCellStyle2;
             this.LastMessageDate.HeaderText = "Last Message Date";
             this.LastMessageDate.Name = "LastMessageDate";
             this.LastMessageDate.ReadOnly = true;
@@ -260,6 +262,16 @@
             this.NetworkLoadTimer.Enabled = true;
             this.NetworkLoadTimer.Interval = 2000;
             this.NetworkLoadTimer.Tick += new System.EventHandler(this.NetworkLoadTimerTick);
+            // 
+            // ConfigSyncButton
+            // 
+            this.ConfigSyncButton.Location = new System.Drawing.Point(628, 10);
+            this.ConfigSyncButton.Name = "ConfigSyncButton";
+            this.ConfigSyncButton.Size = new System.Drawing.Size(97, 23);
+            this.ConfigSyncButton.TabIndex = 1;
+            this.ConfigSyncButton.Text = "Configure Sync";
+            this.ConfigSyncButton.UseVisualStyleBackColor = true;
+            this.ConfigSyncButton.Click += new System.EventHandler(this.ConfigureSyncButtonClicked);
             // 
             // SMSBrowserWindow
             // 
@@ -306,6 +318,7 @@
         private System.Windows.Forms.SaveFileDialog ExportFileDialog;
         private System.Windows.Forms.Button ExportConversationButton;
         private System.Windows.Forms.Timer NetworkLoadTimer;
+        private System.Windows.Forms.Button ConfigSyncButton;
     }
 }
 

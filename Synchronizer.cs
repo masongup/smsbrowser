@@ -15,7 +15,8 @@ namespace SMSBrowser
     {
         private static Thread SyncThread;
         private static Boolean syncRunning;
-        
+        internal static int SyncPort;
+        internal static string SyncPassword;
         
         private Synchronizer()
         {
@@ -28,14 +29,18 @@ namespace SMSBrowser
             SyncThread.Start();
         }
 
-        public static void EndSync()
+        public static Boolean EndSync()
         {
             syncRunning = false;
+            if (SyncThread == null || SyncThread.IsAlive == false)
+                return false;
+            SyncThread.Join();
+            return true;
         }
 
         public static void Sync()
         {
-            TcpListener syncListener = new TcpListener(IPAddress.Any, 1234);
+            TcpListener syncListener = new TcpListener(IPAddress.Any, SyncPort);
             syncListener.Start();
 
             while (syncRunning)
@@ -66,7 +71,7 @@ namespace SMSBrowser
                 //compute the key (need to get the password from somewhere better)
                 byte[] salt = { (byte)0x3b, (byte)0x58, (byte)0x3a, (byte)0x8c, (byte)0x49, (byte)0xd3, (byte)0x21, (byte)0x88 };
                 MD5 MD5Hasher = MD5.Create();
-                byte[] basePassword = Encoding.ASCII.GetBytes("testingpassword");
+                byte[] basePassword = Encoding.ASCII.GetBytes(SyncPassword);
                 byte[] finalPassword = new byte[basePassword.Length + salt.Length];
                 Array.ConstrainedCopy(basePassword, 0, finalPassword, 0, basePassword.Length);
                 Array.ConstrainedCopy(salt, 0, finalPassword, basePassword.Length, salt.Length);
