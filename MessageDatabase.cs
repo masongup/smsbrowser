@@ -36,26 +36,55 @@ namespace SMSBrowser
         //meant to be accessed from multiple threads
         static List<TextMessage> netSyncMessageList;
 
-        public static int ReadFromNetworkInput(string networkData)
+        //should only be called from a non-UI thread doing network comms
+        public static UInt16 ReadFromNetworkInput(string networkData)
         {
             long droidEpoch = DateTime.Parse("January 1 1970, 00:00:00.000").Ticks;
-            int messageCount = 0;
+            UInt16 messageCount = 0;
+            int expectedTotal = 0;
             List<TextMessage> networkList = new List<TextMessage>();
+            if (networkData == null)
+                return 0;
             string[] smsDataLines = networkData.Split('\r');
+            if (smsDataLines == null || smsDataLines.Length == 0)
+                return 0;
+
             foreach (string smsMessage in smsDataLines)
             {
                 if (string.IsNullOrWhiteSpace(smsMessage))
                     continue;
                 string[] smsParts = smsMessage.Split('\t');
                 TextMessage thisMessage = new TextMessage();
-                thisMessage.Time = new DateTime(long.Parse(smsParts[0]) * 10000 + droidEpoch);
-                thisMessage.Text = smsParts[4];
-                thisMessage.IsOutgoing = (smsParts[3] == "2");
-                thisMessage.PhoneNumber = smsParts[2];
-                thisMessage.ContactName = smsParts[1];
-                networkList.Add(thisMessage);
-                messageCount++;
+                try
+                {
+                    if (smsParts.Length == 1)
+                    {
+                        if (!int.TryParse(smsParts[0], out expectedTotal))
+                            return 0;   //if this hits, some part of the transmission must be badly corrupted
+                    }
+                    else if (smsParts.Length == 5)
+                    {
+                        thisMessage.Time = new DateTime(long.Parse(smsParts[0]) * 10000 + droidEpoch);
+                        thisMessage.Text = smsParts[4];
+                        thisMessage.IsOutgoing = (smsParts[3] == "2");
+                        thisMessage.PhoneNumber = smsParts[2];
+                        thisMessage.ContactName = smsParts[1];
+                        networkList.Add(thisMessage);
+                        messageCount++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (ex is FormatException || ex is OverflowException ||
+                        ex is IndexOutOfRangeException)
+                        continue;
+                    else
+                        throw;
+                }
             }
+
+            if (expectedTotal != messageCount)
+                return 0;
 
             if (netSyncMessageList == null)
                 netSyncMessageList = networkList;
@@ -66,6 +95,7 @@ namespace SMSBrowser
             return messageCount;
         }
 
+        //should only be called from the UI thread
         public static Boolean TryUpdateFromNetwork()
         {
             if (netSyncMessageList == null)

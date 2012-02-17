@@ -36,13 +36,6 @@ namespace SMSBrowser
             MessageDatabase.SaveData();
         }
 
-        private void ImportFromDroidClicked(object sender, EventArgs e)
-        {
-            MessageDatabase.ReadFromAndroidDB();
-            MessageDatabase.PopulateContactsList(ContactsListView.Rows);
-            MessageDatabase.SaveData();
-        }
-
         private void ContactListSelectionChanged(object sender, EventArgs e)
         {
             if (ContactsListView.SelectedRows.Count == 0)
@@ -137,7 +130,7 @@ namespace SMSBrowser
             if (MessageDatabase.TryUpdateFromNetwork())
             {
                 MessageDatabase.PopulateContactsList(ContactsListView.Rows);
-                MessageDatabase.SaveData();
+                //MessageDatabase.SaveData();
             }
         }
     }

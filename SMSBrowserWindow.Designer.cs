@@ -29,12 +29,11 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
             this.TopPanel = new System.Windows.Forms.Panel();
             this.SearchBox = new System.Windows.Forms.TextBox();
             this.BottomPanel = new System.Windows.Forms.Panel();
-            this.ImportFromDroidButton = new System.Windows.Forms.Button();
             this.ExportConversationButton = new System.Windows.Forms.Button();
             this.ExportCurrentButton = new System.Windows.Forms.Button();
             this.ExportAllButton = new System.Windows.Forms.Button();
@@ -80,7 +79,6 @@
             // 
             // BottomPanel
             // 
-            this.BottomPanel.Controls.Add(this.ImportFromDroidButton);
             this.BottomPanel.Controls.Add(this.ExportConversationButton);
             this.BottomPanel.Controls.Add(this.ExportCurrentButton);
             this.BottomPanel.Controls.Add(this.ExportAllButton);
@@ -90,16 +88,6 @@
             this.BottomPanel.Name = "BottomPanel";
             this.BottomPanel.Size = new System.Drawing.Size(737, 140);
             this.BottomPanel.TabIndex = 1;
-            // 
-            // ImportFromDroidButton
-            // 
-            this.ImportFromDroidButton.Location = new System.Drawing.Point(187, 18);
-            this.ImportFromDroidButton.Name = "ImportFromDroidButton";
-            this.ImportFromDroidButton.Size = new System.Drawing.Size(166, 31);
-            this.ImportFromDroidButton.TabIndex = 4;
-            this.ImportFromDroidButton.Text = "Import From Droid";
-            this.ImportFromDroidButton.UseVisualStyleBackColor = true;
-            this.ImportFromDroidButton.Click += new System.EventHandler(this.ImportFromDroidClicked);
             // 
             // ExportConversationButton
             // 
@@ -157,14 +145,14 @@
             this.MessagesList.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.Info,
             this.Body});
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.MessagesList.DefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.MessagesList.DefaultCellStyle = dataGridViewCellStyle3;
             this.MessagesList.Dock = System.Windows.Forms.DockStyle.Fill;
             this.MessagesList.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
             this.MessagesList.Location = new System.Drawing.Point(0, 0);
@@ -250,9 +238,9 @@
             // 
             // LastMessageDate
             // 
-            dataGridViewCellStyle2.Format = "d";
-            dataGridViewCellStyle2.NullValue = null;
-            this.LastMessageDate.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle4.Format = "d";
+            dataGridViewCellStyle4.NullValue = null;
+            this.LastMessageDate.DefaultCellStyle = dataGridViewCellStyle4;
             this.LastMessageDate.HeaderText = "Last Message Date";
             this.LastMessageDate.Name = "LastMessageDate";
             this.LastMessageDate.ReadOnly = true;
@@ -317,7 +305,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn LastMessageDate;
         private System.Windows.Forms.SaveFileDialog ExportFileDialog;
         private System.Windows.Forms.Button ExportConversationButton;
-        private System.Windows.Forms.Button ImportFromDroidButton;
         private System.Windows.Forms.Timer NetworkLoadTimer;
     }
 }
