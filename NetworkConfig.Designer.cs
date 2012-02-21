@@ -33,7 +33,7 @@
             this.SyncPasswordLabel = new System.Windows.Forms.Label();
             this.SyncPasswordTextBox = new System.Windows.Forms.TextBox();
             this.SyncPortTextBox = new System.Windows.Forms.TextBox();
-            this.AcceptButton = new System.Windows.Forms.Button();
+            this.SyncAcceptButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // SyncEnabledCheckbox
@@ -45,6 +45,7 @@
             this.SyncEnabledCheckbox.TabIndex = 0;
             this.SyncEnabledCheckbox.Text = "Network Sync Enabled";
             this.SyncEnabledCheckbox.UseVisualStyleBackColor = true;
+            this.SyncEnabledCheckbox.CheckedChanged += new System.EventHandler(this.PasswordTextChanged);
             // 
             // SyncPortLabel
             // 
@@ -66,10 +67,11 @@
             // 
             // SyncPasswordTextBox
             // 
-            this.SyncPasswordTextBox.Location = new System.Drawing.Point(105, 66);
+            this.SyncPasswordTextBox.Location = new System.Drawing.Point(105, 68);
             this.SyncPasswordTextBox.Name = "SyncPasswordTextBox";
             this.SyncPasswordTextBox.Size = new System.Drawing.Size(138, 20);
             this.SyncPasswordTextBox.TabIndex = 3;
+            this.SyncPasswordTextBox.TextChanged += new System.EventHandler(this.PasswordTextChanged);
             // 
             // SyncPortTextBox
             // 
@@ -78,24 +80,26 @@
             this.SyncPortTextBox.Name = "SyncPortTextBox";
             this.SyncPortTextBox.Size = new System.Drawing.Size(63, 20);
             this.SyncPortTextBox.TabIndex = 4;
+            this.SyncPortTextBox.TextChanged += new System.EventHandler(this.ServerPortTextChanged);
             // 
-            // AcceptButton
+            // SyncAcceptButton
             // 
-            this.AcceptButton.Location = new System.Drawing.Point(105, 95);
-            this.AcceptButton.Name = "AcceptButton";
-            this.AcceptButton.Size = new System.Drawing.Size(112, 23);
-            this.AcceptButton.TabIndex = 5;
-            this.AcceptButton.Text = "Accept";
-            this.AcceptButton.UseVisualStyleBackColor = true;
+            this.SyncAcceptButton.DialogResult = System.Windows.Forms.DialogResult.OK;
+            this.SyncAcceptButton.Location = new System.Drawing.Point(105, 95);
+            this.SyncAcceptButton.Name = "SyncAcceptButton";
+            this.SyncAcceptButton.Size = new System.Drawing.Size(112, 23);
+            this.SyncAcceptButton.TabIndex = 5;
+            this.SyncAcceptButton.Text = "Accept";
+            this.SyncAcceptButton.UseVisualStyleBackColor = true;
             // 
             // NetworkConfig
             // 
-            this.AcceptButton = this.AcceptButton;
+            this.AcceptButton = this.SyncAcceptButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(255, 130);
             this.ControlBox = false;
-            this.Controls.Add(this.AcceptButton);
+            this.Controls.Add(this.SyncAcceptButton);
             this.Controls.Add(this.SyncPortTextBox);
             this.Controls.Add(this.SyncPasswordTextBox);
             this.Controls.Add(this.SyncPasswordLabel);
@@ -105,6 +109,7 @@
             this.ShowInTaskbar = false;
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
             this.Text = "NetworkConfig";
+            this.Shown += new System.EventHandler(this.OnShow);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -114,7 +119,7 @@
 
         private System.Windows.Forms.Label SyncPortLabel;
         private System.Windows.Forms.Label SyncPasswordLabel;
-        private System.Windows.Forms.Button AcceptButton;
+        private System.Windows.Forms.Button SyncAcceptButton;
         internal System.Windows.Forms.CheckBox SyncEnabledCheckbox;
         internal System.Windows.Forms.TextBox SyncPortTextBox;
         internal System.Windows.Forms.TextBox SyncPasswordTextBox;

@@ -38,6 +38,8 @@ namespace SMSBrowser
 
             if (Synchronizer.EndSync())
                 Registry.SetValue(registryLocation, "SyncEnabled", "True");
+            else
+                Registry.SetValue(registryLocation, "SyncEnabled", "False");
         }
 
         private void ImportMoreClick(object sender, EventArgs e)
@@ -153,6 +155,7 @@ namespace SMSBrowser
             NetworkConfig configDialog = new NetworkConfig();
             configDialog.SyncPortTextBox.Text = Synchronizer.SyncPort.ToString();
             configDialog.SyncPasswordTextBox.Text = Synchronizer.SyncPassword;
+            configDialog.SyncEnabledCheckbox.Checked = Synchronizer.syncRunning;
             configDialog.ShowDialog();
 
             Synchronizer.EndSync();

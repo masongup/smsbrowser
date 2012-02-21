@@ -14,7 +14,7 @@ namespace SMSBrowser
     class Synchronizer
     {
         private static Thread SyncThread;
-        private static Boolean syncRunning;
+        public static Boolean syncRunning { get; private set; }
         internal static int SyncPort;
         internal static string SyncPassword;
         
@@ -22,11 +22,15 @@ namespace SMSBrowser
         {
         }
 
-        public static void StartSync()
+        public static Boolean StartSync()
         {
+            if (string.IsNullOrEmpty(SyncPassword) || SyncPort == 0)
+                return false;
+
             syncRunning = true;
             SyncThread = new Thread(Sync);
             SyncThread.Start();
+            return true;
         }
 
         public static Boolean EndSync()
@@ -41,24 +45,34 @@ namespace SMSBrowser
         public static void Sync()
         {
             TcpListener syncListener = new TcpListener(IPAddress.Any, SyncPort);
-            syncListener.Start();
-
-            while (syncRunning)
+            try
             {
-                if (!syncListener.Pending())
-                {
-                    Thread.Sleep(200);
-                    continue;
-                }
+                syncListener.Start();
+                Debug.WriteLine(DateTime.Now.ToShortTimeString() + " Started the sync thread successfully");
 
-                TcpClient syncClient = syncListener.AcceptTcpClient();
-                using (syncClient)
+                while (syncRunning)
                 {
-                    NetworkStream syncStream = syncClient.GetStream();
-                    syncStream.ReadTimeout = 1500;
-                    DoSync(syncStream);
-                    syncStream.Close();
+                    if (!syncListener.Pending())
+                    {
+                        Thread.Sleep(200);
+                        continue;
+                    }
+
+                    TcpClient syncClient = syncListener.AcceptTcpClient();
+                    using (syncClient)
+                    {
+                        Debug.WriteLine(DateTime.Now.ToShortTimeString() + " Accepting a connection");
+                        NetworkStream syncStream = syncClient.GetStream();
+                        syncStream.ReadTimeout = 1500;
+                        DoSync(syncStream);
+                        syncStream.Close();
+                    }
                 }
+            }
+            finally
+            {
+                syncListener.Stop();
+                Debug.WriteLine(DateTime.Now.ToShortTimeString() + " Ending the sync thread");
             }
         }
 
@@ -89,12 +103,13 @@ namespace SMSBrowser
                 readSize = syncStream.Read(cipherIV, 0, 16);
                 if (readSize < 16)  //initially, I just throw out the whole transaction if the whole IV isn't recieved. Might want
                 {                     //to do some sort of serial reciever, though.
-                    Debug.WriteLine("Only recieved " + readSize + " bytes on the IV exchange");
+                    Debug.WriteLine(DateTime.Now.ToShortTimeString() + " Only recieved " + readSize + " bytes on the IV exchange");
                     return;
                 }
                 aesProvider.IV = cipherIV;
                 ICryptoTransform decryptorTransform = aesProvider.CreateDecryptor();
                 ICryptoTransform encryptorTransform = aesProvider.CreateEncryptor();
+                Debug.WriteLine(DateTime.Now.ToShortTimeString() + " Successfully read and set the encryption IV");
 
                 //recieve and decrypt the first data block with the device time
                 //nothing will be sent out or processed until the timestamp is verified, which proves that I am talking to
@@ -102,7 +117,7 @@ namespace SMSBrowser
                 readSize = syncStream.Read(inputBuffer, 0, 50);
                 if (readSize < 18)
                 {
-                    Debug.WriteLine("Only recieved " + readSize + " bytes on timestamp exchange");
+                    Debug.WriteLine(DateTime.Now.ToShortTimeString() + " Only recieved " + readSize + " bytes on timestamp exchange");
                     return;
                 }
                 byte[] decryptedData = decryptorTransform.TransformFinalBlock(inputBuffer, 0, readSize);
@@ -110,11 +125,17 @@ namespace SMSBrowser
 
                 DateTime securityTimestamp;
                 if (!DateTime.TryParse(securityString, out securityTimestamp))
+                {
+                    Debug.WriteLine(DateTime.Now.ToShortTimeString() + " Unable to parse datetime string " + securityString);
                     return;
+                }
 
                 TimeSpan timeGap = DateTime.Now - securityTimestamp;
                 if (Math.Abs(timeGap.TotalSeconds) > 120)    //gotta cut this time check down some before running on the net
+                {
+                    Debug.WriteLine(DateTime.Now.ToShortTimeString() + " Timestamp not accepted! Difference is " + timeGap.TotalSeconds + " seconds");
                     return;
+                }
 
                 //the sender has now been verified as the smssync app with the proper password and no interference, so it is time
                 //to transmit the last sms timestamp back to the system.
@@ -123,26 +144,33 @@ namespace SMSBrowser
                 byte[] returnTimeCleartext = Encoding.ASCII.GetBytes(returnTimestamp.ToString("yyyy-MM-ddTHH:mm:ss.fffK"));
                 byte[] returnTimeCipherText = encryptorTransform.TransformFinalBlock(returnTimeCleartext, 0, returnTimeCleartext.Length);
                 syncStream.Write(returnTimeCipherText, 0, returnTimeCipherText.Length);
+                Debug.WriteLine(DateTime.Now.ToShortTimeString() + " Last message timestamp sent");
 
                 //now we recieve and decode the texts
                 byte[] smsDataCiphertext = new byte[5000];
                 readSize = syncStream.Read(smsDataCiphertext, 0, 5000);
+                Debug.WriteLine(DateTime.Now.ToShortTimeString() + " Recieved " + readSize + " bytes of messages");
                 byte[] smsDataClearBytes = decryptorTransform.TransformFinalBlock(smsDataCiphertext, 0, readSize);
                 string smsDataClearString = Encoding.ASCII.GetString(smsDataClearBytes, 0, readSize);
 
                 UInt16 messagesLoaded = MessageDatabase.ReadFromNetworkInput(smsDataClearString);
+                Debug.WriteLine(DateTime.Now.ToShortTimeString() + " Decoded " + messagesLoaded + " messages");
 
                 //time to generate the return message
                 byte[] loadedReturnMessage = BitConverter.GetBytes(messagesLoaded);
                 byte[] returnMessageCipherBytes = encryptorTransform.TransformFinalBlock(loadedReturnMessage, 0, 2);
                 syncStream.Write(returnMessageCipherBytes, 0, 2);
+                Debug.WriteLine(DateTime.Now.ToShortTimeString() + " Wrote number of messages recieved");
             }
             catch (Exception ex) 
             {
                 if (ex is IOException || //caused by network timeouts
                     ex is ArgumentException //caused by invalid ascii points in decoded strings
                     )
-                    return;
+                {
+                    Debug.WriteLine(DateTime.Now.ToShortTimeString() + " Exiting on a standard exception type " + ex.GetType().ToString());
+                    return; 
+                }
                 else
                     throw;
             }
