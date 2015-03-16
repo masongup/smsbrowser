@@ -1,0 +1,5 @@
+This application allows a user to load their SMSes into it, currently via text files, stores them locally, and allows them to be browsed. The left panel is a contact list which lists each contact that has messages in the database, how many messages they have, and when the last message is. The list can be sorted by any of those parameters. When the user clicks on a contact, their entire text history is shown in the right panel, broken down into conversations. Exporting the entire list, all messages from one contact, or a single conversation from one contact, to text files will be supported.
+
+Currently runs with .NET Framework 4.0.
+
+This is currently mostly a learning project for myself. If you find it and like it, then cool. If you want to add some features (yourself or ask me to) or use it in something else, then let me know.
