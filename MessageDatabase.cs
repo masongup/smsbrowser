@@ -7,7 +7,7 @@ using System.IO.Compression;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Data.SQLite;
+//using System.Data.SQLite;
 
 namespace SMSBrowser
 {

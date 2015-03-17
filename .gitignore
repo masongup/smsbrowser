@@ -4,3 +4,4 @@ obj/
 bin/
 .hgignore
 SMSBrowser.suo
+*.ide
