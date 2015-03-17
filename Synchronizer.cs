@@ -14,9 +14,11 @@ namespace SMSBrowser
     class Synchronizer
     {
         private static Thread SyncThread;
-        public static Boolean syncRunning { get; private set; }
+        internal static Boolean syncRunning { get; private set; }
         internal static int SyncPort;
         internal static string SyncPassword;
+        private static DateTime LastSyncTime;
+        private const int MaxSecondsClockDiffAllowed = 20;
         
         private Synchronizer()
         {
@@ -59,6 +61,14 @@ namespace SMSBrowser
                     }
 
                     TcpClient syncClient = syncListener.AcceptTcpClient();
+
+                    if (LastSyncTime != null && ((DateTime.Now - LastSyncTime).TotalSeconds < (2 * MaxSecondsClockDiffAllowed)))
+                    {
+                        syncClient.Close();
+                        Debug.WriteLine(DateTime.Now.ToShortTimeString() + " Rejected a connection because it's too soon since the last one");
+                        continue;
+                    }
+
                     using (syncClient)
                     {
                         Debug.WriteLine(DateTime.Now.ToShortTimeString() + " Accepting a connection");
@@ -131,11 +141,12 @@ namespace SMSBrowser
                 }
 
                 TimeSpan timeGap = DateTime.Now - securityTimestamp;
-                if (Math.Abs(timeGap.TotalSeconds) > 120)    //gotta cut this time check down some before running on the net
+                if (Math.Abs(timeGap.TotalSeconds) > MaxSecondsClockDiffAllowed)
                 {
                     Debug.WriteLine(DateTime.Now.ToShortTimeString() + " Timestamp not accepted! Difference is " + timeGap.TotalSeconds + " seconds");
                     return;
                 }
+                LastSyncTime = securityTimestamp;
 
                 //the sender has now been verified as the smssync app with the proper password and no interference, so it is time
                 //to transmit the last sms timestamp back to the system.
@@ -147,9 +158,10 @@ namespace SMSBrowser
                 Debug.WriteLine(DateTime.Now.ToShortTimeString() + " Last message timestamp sent");
 
                 //now we recieve and decode the texts
-                byte[] smsDataCiphertext = new byte[5000];
-                readSize = syncStream.Read(smsDataCiphertext, 0, 5000);
-                Debug.WriteLine(DateTime.Now.ToShortTimeString() + " Recieved " + readSize + " bytes of messages");
+                byte[] smsDataCiphertext = new byte[3000];
+                readSize = syncStream.Read(smsDataCiphertext, 0, 3000);
+                Debug.WriteLine(DateTime.Now.ToShortTimeString() + " Recieved " + readSize + " bytes of messages on first run");
+                
                 byte[] smsDataClearBytes = decryptorTransform.TransformFinalBlock(smsDataCiphertext, 0, readSize);
                 string smsDataClearString = Encoding.ASCII.GetString(smsDataClearBytes, 0, readSize);
 

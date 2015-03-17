@@ -145,7 +145,13 @@ namespace SMSBrowser
         {
             if (MessageDatabase.TryUpdateFromNetwork())
             {
+                string lastContactSelected = string.Empty;
+                if (ContactsListView.CurrentRow != null)
+                    lastContactSelected = ContactsListView.CurrentRow.Cells[0].Value.ToString();
                 MessageDatabase.PopulateContactsList(ContactsListView.Rows);
+                foreach (DataGridViewRow row in ContactsListView.Rows)
+                    row.Selected = row.Cells[0].Value.ToString().Equals(lastContactSelected);
+
                 MessageDatabase.SaveData();
             }
         }
@@ -163,6 +169,16 @@ namespace SMSBrowser
             Synchronizer.SyncPassword = configDialog.SyncPasswordTextBox.Text;
             if (configDialog.SyncEnabledCheckbox.Checked)
                 Synchronizer.StartSync();
+        }
+
+        private void MessageListScrolled(object sender, ScrollEventArgs e)
+        {
+            if (e.NewValue == 1)
+            {
+                DataGridViewRow oldFirstRow = MessagesList.Rows[0];
+                MessageDatabase.PopulateMessageList(ContactsListView.CurrentRow.Tag, MessagesList.Rows, true);
+                MessagesList.FirstDisplayedScrollingRowIndex = MessagesList.Rows.IndexOf(oldFirstRow);
+            }
         }
     }
 }

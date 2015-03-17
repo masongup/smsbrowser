@@ -32,6 +32,7 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             this.TopPanel = new System.Windows.Forms.Panel();
+            this.ConfigSyncButton = new System.Windows.Forms.Button();
             this.SearchBox = new System.Windows.Forms.TextBox();
             this.BottomPanel = new System.Windows.Forms.Panel();
             this.ExportConversationButton = new System.Windows.Forms.Button();
@@ -49,7 +50,6 @@
             this.ImportTextDialog = new System.Windows.Forms.OpenFileDialog();
             this.ExportFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.NetworkLoadTimer = new System.Windows.Forms.Timer(this.components);
-            this.ConfigSyncButton = new System.Windows.Forms.Button();
             this.TopPanel.SuspendLayout();
             this.BottomPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.MessagesList)).BeginInit();
@@ -69,6 +69,16 @@
             this.TopPanel.Name = "TopPanel";
             this.TopPanel.Size = new System.Drawing.Size(737, 59);
             this.TopPanel.TabIndex = 0;
+            // 
+            // ConfigSyncButton
+            // 
+            this.ConfigSyncButton.Location = new System.Drawing.Point(628, 10);
+            this.ConfigSyncButton.Name = "ConfigSyncButton";
+            this.ConfigSyncButton.Size = new System.Drawing.Size(97, 23);
+            this.ConfigSyncButton.TabIndex = 1;
+            this.ConfigSyncButton.Text = "Configure Sync";
+            this.ConfigSyncButton.UseVisualStyleBackColor = true;
+            this.ConfigSyncButton.Click += new System.EventHandler(this.ConfigureSyncButtonClicked);
             // 
             // SearchBox
             // 
@@ -164,6 +174,7 @@
             this.MessagesList.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.MessagesList.Size = new System.Drawing.Size(410, 464);
             this.MessagesList.TabIndex = 3;
+            this.MessagesList.Scroll += new System.Windows.Forms.ScrollEventHandler(this.MessageListScrolled);
             this.MessagesList.Click += new System.EventHandler(this.ListClicked);
             // 
             // Info
@@ -262,16 +273,6 @@
             this.NetworkLoadTimer.Enabled = true;
             this.NetworkLoadTimer.Interval = 2000;
             this.NetworkLoadTimer.Tick += new System.EventHandler(this.NetworkLoadTimerTick);
-            // 
-            // ConfigSyncButton
-            // 
-            this.ConfigSyncButton.Location = new System.Drawing.Point(628, 10);
-            this.ConfigSyncButton.Name = "ConfigSyncButton";
-            this.ConfigSyncButton.Size = new System.Drawing.Size(97, 23);
-            this.ConfigSyncButton.TabIndex = 1;
-            this.ConfigSyncButton.Text = "Configure Sync";
-            this.ConfigSyncButton.UseVisualStyleBackColor = true;
-            this.ConfigSyncButton.Click += new System.EventHandler(this.ConfigureSyncButtonClicked);
             // 
             // SMSBrowserWindow
             // 

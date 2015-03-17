@@ -35,6 +35,7 @@ namespace SMSBrowser
         static List<Contact> MasterContactList;
         //meant to be accessed from multiple threads
         static List<TextMessage> netSyncMessageList;
+        const int messageLoadLimit = 100;
 
         //should only be called from a non-UI thread doing network comms
         public static UInt16 ReadFromNetworkInput(string networkData)
@@ -64,7 +65,7 @@ namespace SMSBrowser
                     }
                     else if (smsParts.Length == 5)
                     {
-                        thisMessage.Time = new DateTime(long.Parse(smsParts[0]) * 10000 + droidEpoch);
+                        thisMessage.Time = new DateTime(long.Parse(smsParts[0]) * 10000 + droidEpoch).ToLocalTime();
                         thisMessage.Text = smsParts[4];
                         thisMessage.IsOutgoing = (smsParts[3] == "2");
                         thisMessage.PhoneNumber = smsParts[2];
@@ -231,7 +232,7 @@ namespace SMSBrowser
             textFileWriter.Close();
         }
 
-        public static void PopulateMessageList(object contactObject, DataGridViewRowCollection targetGridRows)
+        public static void PopulateMessageList(object contactObject, DataGridViewRowCollection targetGridRows, Boolean isScroll = false)
         {
             if (contactObject == null || contactObject.GetType() != typeof(Contact))
                 return;
@@ -240,17 +241,47 @@ namespace SMSBrowser
             DataGridViewCellStyle incomingCell = null;
             DataGridViewCellStyle outgoingCell = null;
 
-            targetGridRows.Clear();
-            int currentConversation = -1;
+            int skipNumber = selectedContact.MessageList.Count - messageLoadLimit;
+            int takeNumber = messageLoadLimit;
 
-            foreach (TextMessage thisMessage in selectedContact.MessageList)
+            if (isScroll)
+            {
+                if (skipNumber < 0) //if we scrolled to the top of a list where the total number of messages is less than the load limit
+                    return;
+                var rowsWithMessages = from DataGridViewRow row in targetGridRows
+                                       where row.Cells[0].Value != null
+                                       select row;
+                skipNumber -= rowsWithMessages.Count();
+                if (skipNumber < 0)
+                {
+                    takeNumber += skipNumber;
+                    skipNumber = 0;
+                }
+            }
+            else
+            {
+                targetGridRows.Clear();
+                if (skipNumber < 0)
+                    skipNumber = 0;
+            }
+
+            int currentConversation = -1;
+            DateTime lastTime = DateTime.MinValue;
+
+            foreach (TextMessage thisMessage in selectedContact.MessageList.Skip(skipNumber).Take(takeNumber).Reverse())
             {
                 if (currentConversation != thisMessage.ConversationID)
                 {
                     currentConversation = thisMessage.ConversationID;
-                    int seperatorRowNumber = targetGridRows.Add();
-                    targetGridRows[seperatorRowNumber].Cells[1].Value = thisMessage.Time.ToLongDateString();
+                    if (lastTime != DateTime.MinValue)
+                        targetGridRows.Insert(0, string.Empty, lastTime.ToLongDateString());
                 }
+                
+                lastTime = thisMessage.Time;
+
+                
+                targetGridRows.Insert(0, thisMessage.Time.ToShortTimeString(), thisMessage.Text);
+                targetGridRows[0].Tag = thisMessage;
 
                 if (incomingCell == null)
                 {
@@ -261,16 +292,13 @@ namespace SMSBrowser
                     outgoingCell.BackColor = Color.Khaki;
                 }
 
-                int rowNumber = targetGridRows.Add();
-                targetGridRows[rowNumber].Cells[0].Value = thisMessage.Time.ToShortTimeString();
-                targetGridRows[rowNumber].Cells[1].Value = thisMessage.Text;
-                targetGridRows[rowNumber].Tag = thisMessage;
-
                 if (thisMessage.IsOutgoing)
-                    targetGridRows[rowNumber].Cells[1].Style = outgoingCell;
+                    targetGridRows[0].Cells[1].Style = outgoingCell;
                 else
-                    targetGridRows[rowNumber].Cells[1].Style = incomingCell;
+                    targetGridRows[0].Cells[1].Style = incomingCell;
             }
+
+            targetGridRows.Insert(0, string.Empty, lastTime.ToLongDateString());
         }
 
         private static void FindConversationsAndMultiMessages()
@@ -376,7 +404,7 @@ namespace SMSBrowser
             if (MasterMessageList == null || MasterMessageList.Count == 0)
                 return new DateTime(2005, 1, 1);
             else
-                return MasterMessageList[MasterMessageList.Count - 1].Time;
+                return MasterMessageList[MasterMessageList.Count - 1].Time + TimeSpan.FromSeconds(1);
         }
     }
 }
